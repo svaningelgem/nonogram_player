@@ -1,0 +1,9 @@
+pure-python-adb
+Pillow
+
+numpy
+tensorflow
+scipy
+
+notebook
+matplotlib
