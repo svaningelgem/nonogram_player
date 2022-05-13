@@ -130,3 +130,5 @@ dmypy.json
 
 
 *.hdf5
+screenshots/
+.idea/
