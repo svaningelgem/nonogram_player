@@ -7,23 +7,25 @@ from PIL import Image
 
 
 class NumberReader:
-    # Retrieved from `train_data.class_indices`
-    indices = {'1': 0,
-               '10': 1,
-               '11': 2,
-               '12': 3,
-               '13': 4,
-               '14': 5,
-               '15': 6,
-               '2': 7,
-               '3': 8,
-               '4': 9,
-               '5': 10,
-               '6': 11,
-               '7': 12,
-               '8': 13,
-               '9': 14}
-    indices = {v: int(k) for k, v in indices.items()}
+    # Retrieved by: {v: int(k) for k, v in train_data.class_indices.items()}
+    indices = {
+        # index in the network => representing this number in reality
+        0: 1,
+        1: 10,
+        2: 11,
+        3: 12,
+        4: 13,
+        5: 14,
+        6: 15,
+        7: 2,
+        8: 3,
+        9: 4,
+        10: 5,
+        11: 6,
+        12: 7,
+        13: 8,
+        14: 9,
+    }
 
     def __init__(self):
         self._load_net_percentages()

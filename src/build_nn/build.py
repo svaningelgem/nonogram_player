@@ -8,8 +8,7 @@ from typing import Dict, List
 
 from PIL import Image
 
-
-from src.interpret_grid import InterpretGrid
+from src.image2grid import Image2Grid
 
 nr_dir = Path(__file__).parent / 'nr'
 
@@ -76,7 +75,7 @@ def move_numbers_into_right_directory(nrs, files):
 def crop_numbers():
     for level in [2, 3, 4]:
         for png in (Path(__file__).parent / f'../../screenshots/level{level}').glob('*.png'):
-            InterpretGrid(Image.open(png)).interpret()
+            Image2Grid(Image.open(png)).interpret()
 
 
 if __name__ == '1__main__':
