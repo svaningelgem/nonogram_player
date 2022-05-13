@@ -7,3 +7,6 @@ scipy
 
 notebook
 matplotlib
+
+multipledispatch
+pytest

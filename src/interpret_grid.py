@@ -1,12 +1,21 @@
+from collections import defaultdict
 from dataclasses import dataclass, field
-from functools import partial
-from typing import List
+from functools import cache, partial
+from time import time
+from typing import Dict, Iterable, List
 
 import numpy as np
 from PIL import ImageDraw, ImageOps
 from PIL.Image import Image, fromarray, open as imopen
+from multipledispatch import dispatch
 
+from src.read_nr import NumberReader
 from src.utils import TLWH, magenta, pure_white, save, tab_background
+
+
+cross = -1
+unknown = 0
+filled = 1
 
 
 @dataclass
@@ -15,15 +24,115 @@ class HintTab:
     img: Image
 
     tabs: List[np.array] = field(default_factory=list)
-    nrs: List[np.array] = field(default_factory=list)
+    nrs: Dict[int, List[np.array]] = field(default_factory=lambda: defaultdict(list))
 
     def __post_init__(self):
         self.arr = np.array(self.img)
 
 
+class Line:
+    @dispatch(int)
+    def __init__(self, len_: int):
+        self._inner = [unknown] * len_
+
+    @dispatch(list)
+    def __init__(self, fields: List[int]):
+        self._inner = list(fields)
+
+    def __len__(self):
+        return len(self._inner)
+
+    @staticmethod
+    def ltrim(line) -> 'Line':
+        line = line.copy()
+
+        # ltrim the list
+        while line and line[0] == cross:
+            line = line[1:]
+
+        return line
+
+    @staticmethod
+    def rtrim(line) -> 'Line':
+        line = line.copy()
+
+        # rtrim the list
+        while line and line[-1] == cross:
+            line = line[-1:]
+
+        return line
+
+    @property
+    def len_no_cross_at_end(self) -> int:
+        return len(self.ltrim(self.rtrim(self._inner)))
+
+    @property
+    def len_no_crosses(self) -> int:
+        return sum(1 for x in self._inner if x != cross)
+
+    def copy(self):
+        line = Line(1)
+        line._inner = self._inner.copy()
+        return line
+
+    def __hash__(self):
+        return hash(tuple(self._inner))
+
+    def __iter__(self):
+        return iter(self._inner)
+
+    def __repr__(self) -> str:
+        return str(['x' if x is cross else x for x in self._inner])
+
+    def __eq__(self, other) -> bool:
+        return (
+            type(self) == type(other)
+            and self._inner == other._inner
+        )
+
+    def __getitem__(self, index: int) -> int:
+        return self._inner[index]
+
+    def __setitem__(self, index: int, value: int) -> None:
+        if index >= len(self._inner):
+            raise IndexError
+
+        self._inner[index] = value
+
+    def fill_unknown_with_cross(self) -> 'Line':
+        return Line([
+            x if x != unknown else cross
+            for x in self._inner
+        ])
+
+
+class NoSimilaritiesFound(ValueError): ...
+class NoSpaceLeft(ValueError): ...
+
+
+class LineSimilarities:
+    def __init__(self):
+        self._inner = None
+
+    def __iadd__(self, other: Line):
+        assert isinstance(other, Line)
+
+        if self._inner is None:
+            self._inner = other
+            return
+
+        self._inner = [x if x == y else unknown for x, y in zip(self._inner, other)]
+        if all(x == unknown for x in self._inner):
+            raise NoSimilaritiesFound
+
+    def __str__(self):
+        return str(self._inner)
+
+
 class InterpretGrid:
     def __init__(self, img: Image):
         self.img = img.copy().convert('RGB')
+        self.nr_reader = NumberReader()
 
     def _get_bars(self, img: Image, *, left=False):
         tab = HintTab(direction='left' if left else 'top', img=img)
@@ -98,7 +207,7 @@ class InterpretGrid:
 
         return img.astype('uint8')
 
-    def crop_numbers(self, *, left=False):
+    def crop_numbers(self, *, left=False, do_save=False):
         flood_fill_point, hor_selection, ver_selection = self._crop_data(left=left)
         tab_data = self._get_tabs(left=left)
 
@@ -112,9 +221,9 @@ class InterpretGrid:
             raise ValueError(f"Can't do this yet! Got {len(tab_data.tabs)} tabs. File saved as: {save(tab_data.img)}.")
 
         whitened = self._my_floodfill(tab_data.arr, flood_fill_point, 200)
-        save(whitened)
+        if do_save: save(whitened)
 
-        for tab in tab_data.tabs:
+        for idx, tab in enumerate(tab_data.tabs):
             tmp2 = ver_selection(whitened, *tab)
             if np.all(tmp2 == pure_white):
                 raise ValueError("Nothing in this image??")
@@ -133,8 +242,9 @@ class InterpretGrid:
                 if np.all(hor_selection(tmp3, col, w=min_width) == pure_white):
                     # End of number!
                     found_nr = hor_selection(tmp3, nr_start, col)
-                    tab_data.nrs.append(found_nr)
-                    save(found_nr, f'nr')
+                    found_nr = self.nr_reader.predict(found_nr)
+                    tab_data.nrs[idx].append(found_nr)
+                    if do_save: save(found_nr, f'nr')
                     # Skip to first col that isn't pure white
                     col += min_width + 1
                     while col < max_col and np.all(hor_selection(tmp3, col) == pure_white):
@@ -142,16 +252,35 @@ class InterpretGrid:
                     nr_start = col
 
                 col += 1
-            tab_data.nrs.append(hor_selection(tmp3, nr_start, col+1))
-            save(hor_selection(tmp3, nr_start, col+1), 'nr')
+
+            found_nr = hor_selection(tmp3, nr_start, col+1)
+            found_nr = self.nr_reader.predict(found_nr)
+            tab_data.nrs[idx].append(found_nr)
+
+            if do_save: save(hor_selection(tmp3, nr_start, col+1), 'nr')
 
         return tab_data
 
     def interpret(self):
-        left = self.crop_numbers(left=True)
-        top = self.crop_numbers(left=False)
-        a = 1
+        # left = self.crop_numbers(left=True)
+        # top = self.crop_numbers(left=False)
+
+        left = self._get_tabs(left=True)
+        left.nrs = {0: [3], 1: [2, 2], 2: [1, 4], 3: [1, 5], 4: [2, 2, 1, 1], 5: [5, 1], 6: [5, 1], 7: [2, 1], 8: [1, 2], 9: [6]}
+
+        top = self._get_tabs(left=False)
+        top.nrs = {0: [3, 1], 1: [3, 1], 2: [3, 1], 3: [9], 4: [2, 3, 1], 5: [1, 2, 2], 6: [9], 7: [3], 8: [2], 9: [2]}
+
+        matrix = [
+            Line(len(left.nrs))
+            for _ in range(len(top.nrs))
+        ]
+
 
 
 if __name__ == '__main__':
-    InterpretGrid(imopen("../screenshots/level2/2022-05-06 104621.png")).interpret()
+    start = time()
+    InterpretGrid(imopen("../screenshots/level2/2022-05-09 140127.png")).interpret()
+    stop = time()
+
+    print(f'One run took {stop - start}s')
