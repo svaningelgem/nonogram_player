@@ -100,7 +100,9 @@ class Image2Grid:
         else:
             self.tabs_top = tab_data
 
-        if len(tab_data) == 10:  # level 2
+        if len(tab_data) == 5:  # level 1
+            min_width = 15
+        elif len(tab_data) == 10:  # level 2
             min_width = 15
         elif len(tab_data) == 15:  # level 3
             min_width = 15
