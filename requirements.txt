@@ -10,3 +10,11 @@ matplotlib
 
 multipledispatch
 pytest
+
+
+opencv-python
+opencv-contrib-python
+
+
+scikit-image
+pandas

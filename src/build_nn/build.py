@@ -1,13 +1,13 @@
 """
 Script to convert the cropped numbers (which were manually labeled) into appropriate directories.
 """
-import re
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List
 
 from PIL import Image
 
+from src.common import natural_sort
 from src.image2grid import Image2Grid
 
 nr_dir = Path(__file__).parent / 'nr'
@@ -36,17 +36,6 @@ def load_file_with_numbers():
             else:
                 final.append(int(char))
     return final
-
-
-def natural_sort(lst):
-    # https://stackoverflow.com/a/11150413/577669
-    def convert(text):
-        return int(text) if text.isdigit() else text.lower()
-
-    def alphanum_key(key):
-        return [convert(c) for c in re.split(r'([0-9]+)', str(key))]
-
-    return sorted(lst, key=alphanum_key)
 
 
 def move_numbers_into_right_directory(nrs, files):
@@ -108,20 +97,5 @@ def move_images_from_generation_dir_to_final_dir():
         tgt.write_bytes(file.read_bytes())
 
     remove_duplicate_images(out_)
-
-
-def remove_duplicate_images(images_dir):
-    def md5hash(file: Path) -> str:
-        import hashlib
-
-        return hashlib.md5(file.read_bytes()).hexdigest()
-
-    hashes: Dict[str, List[Path]] = defaultdict(list)
-    for file in images_dir.rglob('*.png'):
-        hashes[md5hash(file)].append(file)
-
-    for hsh, file_list in hashes.items():
-        for file in file_list[1:]:
-            file.unlink()
 
 
