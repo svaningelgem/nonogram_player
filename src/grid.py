@@ -5,6 +5,7 @@ import numpy as np
 
 from src.common import unknown
 from src.exceptions import CannotSolve, FullySolved, NoSimilaritiesFound, NotMatchingChars
+from src.hint_tab import HintTab
 from src.line import Line
 from src.solver_common_line_fields import CommonLineFields
 from src.solver_line_possibilties import LinePossibilityGenerator
@@ -12,8 +13,8 @@ from src.solver_line_possibilties import LinePossibilityGenerator
 
 @dataclass
 class Grid:
-    left: List[List[int]]
-    top: List[List[int]]
+    left: HintTab
+    top: HintTab
 
     def __post_init__(self):
         self.inner = np.zeros(shape=(len(self.left), len(self.top)), dtype='int8')

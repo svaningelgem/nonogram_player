@@ -13,7 +13,6 @@ class HintTab:
 
     shapes: List[Tuple[int, int]] = field(default_factory=list)
     nr_imgs: List[List[np.ndarray]] = None
-    nrs: List[List[int]] = None
 
     def __post_init__(self):
         self.arr = np.array(self.img)

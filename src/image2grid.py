@@ -1,23 +1,23 @@
 from functools import cached_property, partial
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict, List, Union
 
 import numpy as np
 from PIL import ImageOps
-from PIL.Image import Image, fromarray
+from PIL.Image import Image, fromarray, open as imopen
 
 from src.hint_tab import HintTab
 from src.grid import Grid
-from src.read_nr import NumberReader
 from src.utils import TLWH, pure_white, save
 
 
 class Image2Grid:
-    def __init__(self, img: Image):
-        self.img = img.copy().convert('RGB')
-        self.nr_reader = NumberReader()
+    def __init__(self, path: Union[str, Path]):
+        self.path = path
+        self.img = imopen(str(path)).copy().convert('RGB')
         self.tabs_left = self.tabs_top = None
 
-    def _get_bars(self, img: Image, *, left=False):
+    def _get_bars(self, img: Image, *, left=False) -> HintTab:
         tab = HintTab(direction='left' if left else 'top', img=img)
         if left:
             line = tab.arr[:,100]
@@ -39,11 +39,10 @@ class Image2Grid:
         # Last one
         tab.shapes.append((tab_start, len(line)))
         tab.nr_imgs = [list() for _ in range(len(tab))]
-        tab.nrs = [list() for _ in range(len(tab))]
 
         return tab
 
-    def _get_tabs(self, *, left=False):
+    def _get_tabs(self, *, left=False) -> HintTab:
         if left:
             tlwh = TLWH(60, 980, 226, 1089)
         else:
@@ -92,7 +91,7 @@ class Image2Grid:
 
         return img.astype('uint8')
 
-    def crop_numbers(self, *, left: bool = False, do_save: bool = False) -> List[List[int]]:
+    def crop_numbers(self, *, left: bool = False, do_save: bool = False) -> HintTab:
         flood_fill_point, hor_selection, ver_selection = self._crop_data(left=left)
         tab_data = self._get_tabs(left=left)
         if left:
@@ -134,29 +133,27 @@ class Image2Grid:
                     # End of number!
                     found_nr_img = hor_selection(tmp3, nr_start, col)
                     tab_data.nr_imgs[idx].append(found_nr_img)
-                    found_nr = self.nr_reader.predict(found_nr_img)
-                    tab_data.nrs[idx].append(found_nr)
-                    if do_save: save(found_nr_img, f'nr')
+
                     # Skip to first col that isn't pure white
                     col += min_width + 1
                     while col < max_col and np.all(hor_selection(tmp3, col) == pure_white):
                         col += 1
+
                     nr_start = col
 
                 col += 1
 
             found_nr_img = hor_selection(tmp3, nr_start, col+1)
             tab_data.nr_imgs[idx].append(found_nr_img)
-            found_nr = self.nr_reader.predict(found_nr_img)
-            tab_data.nrs[idx].append(found_nr)
+
             if do_save: save(found_nr_img, f'nr')
 
             if do_save: save(hor_selection(tmp3, nr_start, col+1), 'nr')
 
-        return tab_data.nrs
+        return tab_data
 
     @cached_property
-    def grid(self):
+    def grid(self) -> Grid:
         return Grid(
             left=self.crop_numbers(left=True),
             top=self.crop_numbers(left=False),

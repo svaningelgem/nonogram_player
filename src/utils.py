@@ -88,7 +88,7 @@ def is_same_file(file1: Union[str, Path], file2: Union[str, Path]) -> bool:
     return md5hash(file1) == md5hash(file2)
 
 
-def scale_image_to_100x100(original_image: np.ndarray) -> np.ndarray:
+def _scale_image_to_100x100(original_image: np.ndarray, w=100, h=100) -> np.ndarray:
     """
     - enlarge the canvas to the maximum dimension
     - rescale to 100x100
@@ -120,20 +120,26 @@ def scale_image_to_100x100(original_image: np.ndarray) -> np.ndarray:
     # save(background)
 
     # And now resize the image from (max, max) -> (100, 100)
-    new_img = cv2.resize(background, dsize=(100, 100), interpolation=cv2.INTER_NEAREST)
+    new_img = cv2.resize(background, dsize=(w, h), interpolation=cv2.INTER_NEAREST)
     # save(new_img)
 
     return new_img
 
 
-@cache
-def scale_to_100x100(img_path: Union[Path, str]) -> np.ndarray:
+def scale_to_100x100(img_path: Union[Path, str, Image, np.ndarray], w=100, h=100) -> np.ndarray:
     """
     - Open the image
     - enlarge the canvas to the maximum dimension
     - rescale to 100x100
     - convert to grayscale
     """
-    image = cv2.imread(str(img_path))
-    new_img = scale_image_to_100x100(image)
+    if isinstance(img_path, (Path, str)):
+        image = cv2.imread(str(img_path))
+    elif isinstance(img_path, Image):
+        image = fromarray(img_path)
+    else:
+        image = img_path
+
+    new_img = _scale_image_to_100x100(image, w=w, h=h)
+
     return cv2.cvtColor(new_img, cv2.COLOR_BGR2GRAY)
