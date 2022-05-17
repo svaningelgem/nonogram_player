@@ -94,7 +94,7 @@ def move_images_from_generation_dir_to_final_dir():
 
         tgt = tgt / f'{counter}.png'
 
-        tgt.write_bytes(file.read_bytes())
+        file.replace(tgt)
 
     remove_duplicate_images(out_)
 

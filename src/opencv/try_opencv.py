@@ -1,12 +1,11 @@
 import pickle
 from collections import defaultdict
 from dataclasses import dataclass, field
-from pprint import pprint
 from typing import Dict, List
 
 from skimage.metrics import structural_similarity
 
-from src.opencv._common import *
+from src.utils import all_final_number_files, scale_to_100x100
 
 
 @dataclass
@@ -38,7 +37,7 @@ scores: Dict[str, Dict[str, Metrics]] = defaultdict(lambda: defaultdict(Metrics)
 processed = set()
 
 
-for first in all_files:
+for first in all_final_number_files:
     first_img = scale_to_100x100(first)
 
     bf = cv2.BFMatcher(cv2.NORM_HAMMING)
@@ -47,7 +46,7 @@ for first in all_files:
 
     (target_kp, target_des) = detector.detectAndCompute(first_img, None)
 
-    for second in all_files:
+    for second in all_final_number_files:
         to_process = (first, second)
         if to_process in processed:
             continue

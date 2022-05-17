@@ -1,20 +1,20 @@
 from skimage.metrics import structural_similarity
 
-from ._common import *
+from ..utils import all_final_number_files, final_numbers_path, scale_to_100x100
 
 
 def write_all_scores_to_csv():
     with open('output.csv', 'w') as fp:
-        fp.write(';'.join(str(x.relative_to(base_path)) for x in all_files))
+        fp.write(';'.join(str(x.relative_to(final_numbers_path)) for x in all_final_number_files))
         fp.write(";\n")
 
-        for first in all_files:
+        for first in all_final_number_files:
             first_img = scale_to_100x100(first)
 
-            fp.write(str(first.relative_to(base_path)))
+            fp.write(str(first.relative_to(final_numbers_path)))
             fp.write(';')
 
-            for second in all_files:
+            for second in all_final_number_files:
                 second_img = scale_to_100x100(second)
 
                 x = str(structural_similarity(first_img, second_img)).replace('.', ',')

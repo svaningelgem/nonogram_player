@@ -1,29 +1,9 @@
-import hashlib
-from collections import defaultdict
-from functools import cache
-from pathlib import Path
-from typing import Dict, List, Union
-
 from PIL.Image import open as imopen
 
 from src.image2grid import Image2Grid
-from src.utils import save
-
-screenshots_path = Path(__file__).parent / '../../screenshots/levels'
-processed_path = Path(__file__).parent / '../../screenshots/processed'
-numbers_path = screenshots_path / '../new_nr'
+from src.utils import is_same_file, numbers_path, processed_path, remove_duplicate_images, save, screenshots_path
 
 processed_path.mkdir(parents=True, exist_ok=True)
-
-
-@cache
-def md5hash(file: Union[str, Path]) -> str:
-    return hashlib.md5(Path(file).read_bytes()).hexdigest()
-
-
-@cache
-def is_same_file(file1: Union[str, Path], file2: Union[str, Path]) -> bool:
-    return md5hash(file1) == md5hash(file2)
 
 
 # Split towards numbers
@@ -37,10 +17,10 @@ def split_towards_number_directories():
             file.unlink()
             continue
 
-        print('Working on:', file)
-
         if file.parent.name == 'disabled_tab':
             continue
+
+        print('Working on:', file)
 
         tmp = Image2Grid(imopen(file))
         calculated_grid = tmp.grid
@@ -49,20 +29,10 @@ def split_towards_number_directories():
                 save(tmp.tabs_left.nr_imgs[x][y], f'{numbers_path.name}/{nr}', increasing=True)
 
         # And move file
-        processed.write_bytes(file.read_bytes())
-        file.unlink()
-
-
-def remove_duplicate_images(from_path: Path) -> None:
-    hashes: Dict[str, List[Path]] = defaultdict(list)
-    for file in from_path.rglob('*.png'):
-        hashes[md5hash(file)].append(file)
-
-    for hsh, file_list in hashes.items():
-        for file in file_list[1:]:
-            file.unlink()
+        file.replace(processed)
 
 
 if __name__ == '__main__':
-    split_towards_number_directories()
+    # split_towards_number_directories()
+
     remove_duplicate_images(numbers_path)
