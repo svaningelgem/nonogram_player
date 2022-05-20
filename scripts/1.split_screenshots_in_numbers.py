@@ -1,47 +1,12 @@
 from pathlib import Path
-from typing import Generator
 
 import cv2
-import numpy as np
-from PIL.Image import open as imopen
 
 from src.hint_tab import HintTab
 from src.image2grid import Image2Grid
 from src.interpret_number import InterpretNumber
 from src.utils import md5hash, numbers_path, processed_path, remove_duplicate_images, save, \
-    scale_to_100x100, screenshots_levels_path
-
-processed_path.mkdir(parents=True, exist_ok=True)
-
-
-white = 255
-
-
-def skip_whites(img: np.ndarray, start_row: int = 0) -> int:
-    while start_row < img.shape[1]:
-        if not np.all(img[:, start_row] == white):
-            break
-
-        start_row += 1
-
-    return start_row
-
-
-def split_in_separate_numbers(img: np.ndarray) -> Generator[np.ndarray, None, None]:
-    start = end = skip_whites(img)
-
-    while start < img.shape[1]:
-        end += 1
-        if end >= img.shape[1]:
-            break
-
-        if np.all(img[:, end] == white):
-            yield img[:, start:end]
-
-            start = end = skip_whites(img, start_row=end)
-
-    if start != end:
-        yield img[:, start:end]
+    scale_to_100x100, screenshots_levels_path, split_in_separate_numbers
 
 
 # Split towards numbers

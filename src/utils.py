@@ -4,12 +4,12 @@ from collections import defaultdict, namedtuple
 from datetime import datetime
 from functools import cache
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, Generator, List, Union
 
 import cv2
 import numpy as np
 from PIL import ImageOps
-from PIL.Image import Image, fromarray
+from PIL.Image import Image, fromarray, open as imopen
 
 from src.common import natural_sort
 
@@ -22,7 +22,8 @@ final_numbers_path = screenshots_path / 'nr'
 
 all_final_number_files = natural_sort(final_numbers_path.rglob('*.png'))
 
-for x in [x for x in globals().values()]:
+# Create all these paths
+for x in list(globals().values()):  # Need to wrap it in a list because otherwise things might change during processing
     if isinstance(x, Path):
         x.mkdir(parents=True, exist_ok=True)
 
@@ -31,8 +32,11 @@ counter = 0
 
 TLWH = namedtuple('TLWH', 'x y w h')
 pure_white = (255, 255, 255)
+white = 255
 tab_background = (0xeb, 0xef, 0xf7)
 magenta = (255, 0, 255)
+
+ImageType = Union[str, Path, Image, np.ndarray]
 
 
 def save(img: Union[Image, np.ndarray], subfolder: str = '', *, increasing: bool = False) -> Path:
@@ -88,17 +92,16 @@ def is_same_file(file1: Union[str, Path], file2: Union[str, Path]) -> bool:
     return md5hash(file1) == md5hash(file2)
 
 
-def _scale_image_to_100x100(original_image: np.ndarray, w=100, h=100) -> np.ndarray:
+def _scale_image_to_100x100(original_image: Image, w=100, h=100) -> np.ndarray:
     """
     - enlarge the canvas to the maximum dimension
     - rescale to 100x100
     """
 
     # Crop it first
-    tmp = fromarray(original_image)
-    mask = ImageOps.invert(tmp)  # Make white -> black
+    mask: Image = ImageOps.invert(original_image)  # Make white -> black
     image_box = mask.getbbox()
-    cropped = tmp.crop(image_box)
+    cropped: Image = original_image.crop(image_box)
 
     # Now resize it to 100x100
     im = np.array(cropped)
@@ -106,7 +109,7 @@ def _scale_image_to_100x100(original_image: np.ndarray, w=100, h=100) -> np.ndar
     max_ = max(im.shape[:2])
 
     # make a max_ by max_ image
-    background = np.zeros(shape=(max_, max_, 3), dtype=original_image.dtype)
+    background = np.zeros(shape=(max_, max_, 3), dtype='uint8')
     # Set the background to white
     background[:] = (255, 255, 255)
 
@@ -120,26 +123,74 @@ def _scale_image_to_100x100(original_image: np.ndarray, w=100, h=100) -> np.ndar
     # save(background)
 
     # And now resize the image from (max, max) -> (100, 100)
-    new_img = cv2.resize(background, dsize=(w, h), interpolation=cv2.INTER_NEAREST)
+    new_img: Image = cv2.resize(background, dsize=(w, h), interpolation=cv2.INTER_NEAREST)
     # save(new_img)
 
     return new_img
 
 
-def scale_to_100x100(img_path: Union[Path, str, Image, np.ndarray], w=100, h=100) -> np.ndarray:
+def scale_to_100x100(img_path: ImageType, w=100, h=100) -> np.ndarray:
     """
     - Open the image
     - enlarge the canvas to the maximum dimension
     - rescale to 100x100
     - convert to grayscale
     """
-    if isinstance(img_path, (Path, str)):
-        image = cv2.imread(str(img_path))
-    elif isinstance(img_path, Image):
-        image = fromarray(img_path)
-    else:
-        image = img_path
+    img = convert_image_to_pil(img_path)
 
-    new_img = _scale_image_to_100x100(image, w=w, h=h)
+    new_img = _scale_image_to_100x100(img, w=w, h=h)
 
     return cv2.cvtColor(new_img, cv2.COLOR_BGR2GRAY)
+
+
+def convert_image_to_numpy(image: ImageType) -> np.ndarray:
+    if isinstance(image, Path):
+        image = str(image.resolve())
+
+    if isinstance(image, str):
+        image = imopen(image)
+
+    if isinstance(image, Image):
+        image = np.array(image.convert('RGB'))
+
+    return image.copy()
+
+
+def convert_image_to_pil(image: ImageType) -> Image:
+    if isinstance(image, Path):
+        image = str(image.resolve())
+
+    if isinstance(image, str):
+        image = imopen(image)
+
+    if isinstance(image, np.ndarray):
+        image = fromarray(image)
+
+    return image.copy().convert('RGB')
+
+
+def skip_whites(img: np.ndarray, start_row: int = 0) -> int:
+    while start_row < img.shape[1]:
+        if not np.all(img[:, start_row] == white):
+            break
+
+        start_row += 1
+
+    return start_row
+
+
+def split_in_separate_numbers(img: np.ndarray) -> Generator[np.ndarray, None, None]:
+    start = end = skip_whites(img)
+
+    while start < img.shape[1]:
+        end += 1
+        if end >= img.shape[1]:
+            break
+
+        if np.all(img[:, end] == white):
+            yield img[:, start:end]
+
+            start = end = skip_whites(img, start_row=end)
+
+    if start != end:
+        yield img[:, start:end]

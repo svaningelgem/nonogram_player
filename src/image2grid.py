@@ -8,13 +8,12 @@ from PIL.Image import Image, fromarray, open as imopen
 
 from src.hint_tab import HintTab
 from src.grid import Grid
-from src.utils import TLWH, pure_white, save
+from src.utils import ImageType, TLWH, convert_image_to_numpy, convert_image_to_pil, pure_white, save
 
 
 class Image2Grid:
-    def __init__(self, path: Union[str, Path]):
-        self.path = path
-        self.img = imopen(str(path)).copy().convert('RGB')
+    def __init__(self, image: ImageType):
+        self.img = convert_image_to_pil(image)
         self.tabs_left = self.tabs_top = None
 
     def _get_bars(self, img: Image, *, left=False) -> HintTab:

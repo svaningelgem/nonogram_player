@@ -1,11 +1,9 @@
-from dataclasses import dataclass
-from itertools import count
 from typing import List
 
 from .common import cross
-from .line import Line
-from .common_line_fields import CommonLineFields
 from .exceptions import NoSpaceLeft
+from .line import Line
+from .solver_common_line_fields import CommonLineFields
 
 
 def skip_crosses(line: Line, idx: int) -> int:
@@ -45,12 +43,6 @@ class Solver:
             # if nr_idx != 0:
             #     start_index += 1  # 1 cross at least
             start_index = skip_crosses(line, start_index)
-
-
-
-
-
-
 
         surely_filled = sum(nrs)  # How many 'filled' there are in this line
         need_at_least_x_spaces = len(nrs) - 1  # How many spaces I need to keep to separate stuff

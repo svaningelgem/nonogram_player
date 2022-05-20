@@ -7,7 +7,7 @@ import numpy as np
 from PIL.Image import Image
 from easyocr import Reader
 
-from src.utils import scale_to_100x100
+from src.utils import ImageType, scale_to_100x100
 
 
 def _extract_pure_image(img_path: Union[Path, str, Image, np.ndarray]) -> np.ndarray:
@@ -42,7 +42,7 @@ class InterpretNumber:
         for path in _reference_image_path.glob('*.png')
     }
 
-    image: Union[Path, str, Image, np.ndarray]
+    image: ImageType
 
     def __post_init__(self):
         self.image = _extract_pure_image(self.image)

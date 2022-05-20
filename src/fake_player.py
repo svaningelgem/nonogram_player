@@ -100,3 +100,12 @@ class FakePlayer:
     #     time.sleep(2)
     #
     #     save_screenshot(device)
+
+
+
+"abc'def"
+'abc"def'
+"ab'c"def"
+
+
+"""abc'c"def"""
