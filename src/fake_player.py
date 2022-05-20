@@ -12,7 +12,6 @@ from src.utils import TLWH, save
 
 
 class FakePlayer:
-    # adb input keys: https://forum.xda-developers.com/t/q-adb-input-keyevent-for-long-press-on-power-button.2063741/#post-64890206
     _client: Client = None
     _device: Device = None
     _devices: List[Device] = None
@@ -88,6 +87,8 @@ class FakePlayer:
         self.device.shell('input tap 720 2564')
         time.sleep(1)
 
+
+
     # if __name__ == '__main__':
     #     device, client = connect()
     #     if get_foreground_app(device) != app_name:
@@ -100,12 +101,3 @@ class FakePlayer:
     #     time.sleep(2)
     #
     #     save_screenshot(device)
-
-
-
-"abc'def"
-'abc"def'
-"ab'c"def"
-
-
-"""abc'c"def"""
