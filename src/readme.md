@@ -12,10 +12,15 @@ adb shell input keyevent 66 # --> enter
 adb shell input keyevent --longpress KEYCODE_POWER  # --> press long on a certain key
 
 # click somewhere
-adb input tap '440 200'  # 440 = x, 200 = y coordinates
+adb shell input tap '440 200'  # 440 = x, 200 = y coordinates
 
 # type text
-adb input text "{text_to_type}"  # make sure you have the quotation marks around your text
+adb shell input text "{text_to_type}"  # make sure you have the quotation marks around your text
+
+# Swipe
+adb shell input swipe x1 y1 x2 y2 [duration in ms]  # Swipe from (x1, y1) -> (x2, y2)
+# Simulating longpress
+adb shell input swipe x1 y1 x1 y1 [250]  # coord1 == coord2, but duration is longer  
 ```
 
 Complete list of ADB keycodes:

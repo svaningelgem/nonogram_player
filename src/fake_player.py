@@ -1,9 +1,9 @@
+import logging
+import sys
 import time
-from collections import defaultdict
 from functools import cache
 from io import BytesIO
-from pprint import pprint
-from typing import List, Tuple
+from typing import Generator, List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -11,10 +11,12 @@ from PIL.Image import Image, open as imopen
 from ppadb.client import Client
 from ppadb.device import Device
 
-from src.common import cross, filled
+from src.common import filled
 from src.playing_field import PlayingField
-from src.utils import TLWH, save
+from src.utils import save
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app_name = 'com.easybrain.nonogram'
 
@@ -46,12 +48,12 @@ class FakePlayer:
         self._devices = self._client.devices()
 
         if len(self._devices) == 0:
-            print('No devices')
-            quit()
+            logger.error('No devices')
+            sys.exit(1)
 
         self._device = self._devices[0]
 
-        print(f'Connected to {self._device}')
+        logger.info(f'Connected to {self._device.serial}')
 
     @property
     def foreground_app(self) -> str:
@@ -140,21 +142,66 @@ class FakePlayer:
             y.max() - y.min(),
         )
 
-    def play_level(self):
-        screen = self.screencap()
-        field = PlayingField(screen)
-        solution = field.solution
-        x, y, w, h = self.get_playing_field_area(screen)
+    @staticmethod
+    def _adjust_solution_in_taps_and_swipes(solution: List[List[int]], x: int, y: int, w: int, h: int, duration_per_field=75) -> Generator[str, None, None]:
+        commands_to_run = []
+        dummy = []
 
         row_height = h / len(solution)
         col_width = w / len(solution[0])
 
+        start_x: Optional[int] = None
+        end_x: Optional[int] = None
+
+        def add(reset=False) -> Generator[str, None, None]:
+            nonlocal start_x, end_x
+
+            click_y = int(y + row_height * i + row_height/2)
+
+            if reset:
+                if start_x is not None:
+                    if start_x != end_x:  # Swipe
+                        amount_of_fields = round((end_x - start_x) / col_width) + 1
+                        yield f"input swipe {start_x} {click_y} {end_x} {click_y} {amount_of_fields * duration_per_field}"
+                    else:
+                        yield f"input tap {start_x} {click_y}"
+
+                start_x = end_x = None
+                return
+
+            click_x = int(x + col_width * j + col_width/2)
+            dummy.append(f"input tap {click_x} {click_y}")
+
+            if start_x is None:
+                start_x = end_x = click_x
+            else:
+                end_x = click_x
+
         for i, row in enumerate(solution):
             for j, element in enumerate(row):
                 if element != filled:
+                    yield from add(reset=True)
                     continue
 
-                click_x = int(x + col_width * j + col_width/2)
-                click_y = int(y + row_height * i + row_height/2)
-                self.device.shell(f'input tap {click_x} {click_y}')
-                time.sleep(0.5)
+                yield from add()
+            yield from add(reset=True)
+
+    def play_level(self):
+        logger.info('Loading screen')
+        screen = self.screencap()
+
+        save(screen)
+
+        logger.info(' > Solving')
+        field = PlayingField(screen)
+        solution = field.solution
+        logger.debug(' > Found solution: %s', solution)
+
+        logger.info(' > Entering solution')
+        field_rect = self.get_playing_field_area(screen)
+        logger.debug(' > Field rectangle: %s', field_rect)
+        for command in self._adjust_solution_in_taps_and_swipes(solution, *field_rect):
+            logger.debug('Launching command: %s', command)
+            self.device.shell(command)
+
+        logger.info(' > Finished')
