@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from itertools import count
 
 from src.exceptions import NoSimilaritiesFound
-from src.utils import unknown
 from src.line import Line
+from src.utils import unknown
 
 
 @dataclass

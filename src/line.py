@@ -1,6 +1,5 @@
-from functools import cache
 from itertools import count
-from typing import List, Union
+from typing import List
 
 import numpy as np
 from multipledispatch import dispatch

@@ -1,14 +1,12 @@
 from functools import cached_property, partial
-from pathlib import Path
-from typing import Dict, List, Union
 
 import numpy as np
 from PIL import ImageOps
-from PIL.Image import Image, fromarray, open as imopen
+from PIL.Image import Image, fromarray
 
-from src.hint_tab import HintTab
 from src.grid import Grid
-from src.utils import ImageType, TLWH, convert_image_to_numpy, convert_image_to_pil, pure_white, save
+from src.hint_tab import HintTab
+from src.utils import ImageType, TLWH, convert_image_to_pil, pure_white, save
 
 
 class Image2Grid:

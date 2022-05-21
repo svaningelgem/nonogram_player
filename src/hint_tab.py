@@ -1,6 +1,5 @@
-from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 from PIL.Image import Image

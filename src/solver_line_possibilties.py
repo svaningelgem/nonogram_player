@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Generator, List, Union
 
-from src.utils import cross, filled
 from src.line import Line
+from src.utils import cross, filled
 
 
 @dataclass

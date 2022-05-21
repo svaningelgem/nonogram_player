@@ -1,9 +1,9 @@
 from typing import List
 
-from .utils import cross
 from .exceptions import NoSpaceLeft
 from .line import Line
 from .solver_common_line_fields import CommonLineFields
+from .utils import cross
 
 
 def skip_crosses(line: Line, idx: int) -> int:

@@ -1,13 +1,10 @@
 from dataclasses import dataclass, field
 from functools import cached_property
-from pathlib import Path
-from typing import List, Union
+from typing import List
 
 import numpy as np
-from PIL.Image import Image
 
 from .exceptions import CannotSolve, NoSimilaritiesFound, NotMatchingChars
-from .hint_tab import HintTab
 from .image2grid import Image2Grid
 from .interpret_number import InterpretNumber
 from .line import Line
