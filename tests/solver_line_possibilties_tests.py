@@ -1,7 +1,7 @@
 # tests for LinePossibilityGenerator
 import unittest
 
-from src.common import cross, filled
+from src.utils import cross, filled
 from src.line import Line
 from src.solver_line_possibilties import LinePossibilityGenerator
 

@@ -1,6 +1,6 @@
 from typing import List
 
-from .common import cross
+from .utils import cross
 from .exceptions import NoSpaceLeft
 from .line import Line
 from .solver_common_line_fields import CommonLineFields

@@ -11,9 +11,8 @@ from PIL.Image import Image, open as imopen
 from ppadb.client import Client
 from ppadb.device import Device
 
-from src.common import filled
 from src.playing_field import PlayingField
-from src.utils import save
+from src.utils import filled, save
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -190,8 +189,6 @@ class FakePlayer:
         logger.info('Loading screen')
         screen = self.screencap()
 
-        # save(screen)
-
         logger.info(' > Solving')
         field = PlayingField(screen)
         solution = field.solution
@@ -205,3 +202,4 @@ class FakePlayer:
             self.device.shell(command)
 
         logger.info(' > Finished')
+        time.sleep(5)  # Wait for the ending animation to finish

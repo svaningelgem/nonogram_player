@@ -1,5 +1,6 @@
 import hashlib
 import os
+import re
 from collections import defaultdict, namedtuple
 from datetime import datetime
 from functools import cache
@@ -11,14 +12,23 @@ import numpy as np
 from PIL import ImageOps
 from PIL.Image import Image, fromarray, open as imopen
 
-from src.common import natural_sort
-
-
 screenshots_path = Path(__file__).parent / '../screenshots'
 screenshots_levels_path = screenshots_path / 'levels'
 processed_path = screenshots_path / 'processed'
 numbers_path = screenshots_path / 'new_nr'
 final_numbers_path = screenshots_path / 'nr'
+
+
+def natural_sort(lst):
+    # https://stackoverflow.com/a/11150413/577669
+    def convert(text):
+        return int(text) if text.isdigit() else text.lower()
+
+    def alphanum_key(key):
+        return [convert(c) for c in re.split(r'([0-9]+)', str(key))]
+
+    return sorted(lst, key=alphanum_key)
+
 
 all_final_number_files = natural_sort(final_numbers_path.rglob('*.png'))
 
@@ -194,3 +204,8 @@ def split_in_separate_numbers(img: np.ndarray) -> Generator[np.ndarray, None, No
 
     if start != end:
         yield img[:, start:end]
+
+
+cross = -1
+unknown = 0
+filled = 1

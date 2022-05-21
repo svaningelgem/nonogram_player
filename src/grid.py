@@ -3,7 +3,7 @@ from typing import Dict, List
 
 import numpy as np
 
-from src.common import unknown
+from src.utils import unknown
 from src.exceptions import CannotSolve, FullySolved, NoSimilaritiesFound, NotMatchingChars
 from src.hint_tab import HintTab
 from src.line import Line

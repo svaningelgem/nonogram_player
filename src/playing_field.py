@@ -6,7 +6,6 @@ from typing import List, Union
 import numpy as np
 from PIL.Image import Image
 
-from .common import unknown
 from .exceptions import CannotSolve, NoSimilaritiesFound, NotMatchingChars
 from .hint_tab import HintTab
 from .image2grid import Image2Grid
@@ -14,7 +13,7 @@ from .interpret_number import InterpretNumber
 from .line import Line
 from .solver_common_line_fields import CommonLineFields
 from .solver_line_possibilties import LinePossibilityGenerator
-from .utils import ImageType, convert_image_to_numpy, split_in_separate_numbers
+from .utils import ImageType, convert_image_to_numpy, split_in_separate_numbers, unknown
 
 
 @dataclass

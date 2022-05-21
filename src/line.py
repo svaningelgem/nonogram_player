@@ -6,7 +6,7 @@ import numpy as np
 from multipledispatch import dispatch
 
 from src.exceptions import NotMatchingChars
-from src.common import cross, unknown
+from src.utils import cross, unknown
 
 
 class Line:
