@@ -190,7 +190,7 @@ class FakePlayer:
         logger.info('Loading screen')
         screen = self.screencap()
 
-        save(screen)
+        # save(screen)
 
         logger.info(' > Solving')
         field = PlayingField(screen)
