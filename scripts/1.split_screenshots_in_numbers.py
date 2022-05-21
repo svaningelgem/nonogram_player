@@ -5,19 +5,20 @@ import cv2
 from src.hint_tab import HintTab
 from src.image2grid import Image2Grid
 from src.interpret_number import InterpretNumber
-from src.utils import md5hash, numbers_path, processed_path, remove_duplicate_images, save, \
-    scale_to_100x100, screenshots_levels_path, split_in_separate_numbers
+from src.utils import (
+    md5hash, numbers_path, processed_path, remove_duplicate_images, save, scale_to_100x100, screenshots_levels_path,
+    split_in_separate_numbers
+)
 
 
 # Split towards numbers
 def split_towards_number_directories(to_path):
     previous_file_hashes = {
-        md5hash(filename)
-        for filename in processed_path.rglob('*.png')
+        md5hash(filename) for filename in processed_path.rglob("*.png")
     }
 
-    for file in screenshots_levels_path.rglob('*.png'):
-        if file.parent.name in ['disabled_tab', 'empty tab']:
+    for file in screenshots_levels_path.rglob("*.png"):
+        if file.parent.name in ["disabled_tab", "empty tab"]:
             continue
 
         current_hash = md5hash(file)
@@ -31,15 +32,15 @@ def split_towards_number_directories(to_path):
         processed = processed_path / file.name
         counter = 0
         while processed.exists():
-            processed = processed_path / f'{file.stem}_{counter}.png'
+            processed = processed_path / f"{file.stem}_{counter}.png"
             counter += 1
 
-        print('Working on:', file)
+        print("Working on:", file)
 
         tmp = Image2Grid(file)
         try:
             calculated_grid = tmp.grid
-        except ValueError as ex:  # ValueError: Can't do this yet! Got 1 tabs. File saved as: E:\nonogram_player\src\..\screenshots\2022-05-17 202756.png.
+        except ValueError as ex:  # ValueError: Can't do this yet! Got 1 tabs. File saved as: ...
             print(ex)
             continue
 
@@ -48,8 +49,14 @@ def split_towards_number_directories(to_path):
                 for nr_img in nr_images:
                     # Can be > 10 here still!
                     for additional_number in split_in_separate_numbers(nr_img):
-                        which_number_is_it = InterpretNumber(additional_number).most_likely
-                        save(additional_number, f'{to_path.name}/{which_number_is_it}', increasing=True)
+                        which_number_is_it = InterpretNumber(
+                            additional_number
+                        ).most_likely
+                        save(
+                            additional_number,
+                            f"{to_path.name}/{which_number_is_it}",
+                            increasing=True,
+                        )
 
         process_imgs(calculated_grid.left)
         process_imgs(calculated_grid.top)
@@ -59,11 +66,11 @@ def split_towards_number_directories(to_path):
 
 
 def convert_all_to_100x100(p: Path) -> None:
-    for img in p.rglob('*.png'):
+    for img in p.rglob("*.png"):
         cv2.imwrite(str(img), scale_to_100x100(img))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     split_towards_number_directories(numbers_path)
     convert_all_to_100x100(numbers_path)
     remove_duplicate_images(numbers_path)

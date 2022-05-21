@@ -1,9 +1,9 @@
 # tests for LinePossibilityGenerator
 import unittest
 
-from src.utils import cross, filled
 from src.line import Line
 from src.solver_line_possibilties import LinePossibilityGenerator
+from src.utils import cross, filled
 
 dummy_testcase = unittest.TestCase()
 dummy_testcase.maxDiff = None
@@ -16,10 +16,8 @@ def test_one_field():
         Line([filled, cross, filled, cross, cross]),
         Line([filled, cross, cross, filled, cross]),
         Line([filled, cross, cross, cross, filled]),
-
         Line([cross, filled, cross, filled, cross]),
         Line([cross, filled, cross, cross, filled]),
-
         Line([cross, cross, filled, cross, filled]),
     ]
 

@@ -11,7 +11,7 @@ from src.utils import ImageType, scale_to_100x100
 
 
 def _extract_pure_image(img_path: Union[Path, str, Image, np.ndarray]) -> np.ndarray:
-    tmp = scale_to_100x100(img_path).astype('int8')
+    tmp = scale_to_100x100(img_path).astype("int8")
     tmp[tmp > 0] = 127
     tmp[tmp < 0] = -1
     return tmp
@@ -29,17 +29,19 @@ def _calculate_distance(background: np.ndarray, foreground: np.ndarray) -> float
 
 
 def _add_border(img: np.ndarray, size: int) -> np.ndarray:
-    tmp = np.full((img.shape[0] + size*2, img.shape[1] + size*2), 255, dtype=img.dtype)
-    tmp[size:img.shape[0] + size, size:img.shape[1] + size] = img
+    tmp = np.full(
+        (img.shape[0] + size * 2, img.shape[1] + size * 2), 255, dtype=img.dtype
+    )
+    tmp[size: img.shape[0] + size, size: img.shape[1] + size] = img
     return tmp
 
 
 @dataclass
 class InterpretNumber:
-    _reference_image_path: ClassVar[Path] = Path(__file__).parent / 'reference_images'
+    _reference_image_path: ClassVar[Path] = Path(__file__).parent / "reference_images"
     _reference_images: ClassVar[Dict[str, np.ndarray]] = {
         path.stem: _extract_pure_image(path)
-        for path in _reference_image_path.glob('*.png')
+        for path in _reference_image_path.glob("*.png")
     }
 
     image: ImageType
@@ -58,10 +60,7 @@ class InterpretNumber:
         worst = max(distances.values())
 
         # Convert it into a %
-        preds = {
-            nr: 1 - (distance / worst)
-            for nr, distance in distances.items()
-        }
+        preds = {nr: 1 - (distance / worst) for nr, distance in distances.items()}
 
         # Sort them with the first the best
         preds_sorted = sorted(preds.items(), key=lambda x: x[1], reverse=True)
@@ -85,15 +84,17 @@ class InterpretNumber:
 
     def _detect_via_ocr(self) -> Tuple[str, float]:
         if InterpretNumber._ocr is None:
-            InterpretNumber._ocr = Reader(['en', 'nl'])
+            InterpretNumber._ocr = Reader(["en", "nl"])
 
-        args = dict(allowlist=list('0123456789'), detail=1)
+        args = dict(allowlist=list("0123456789"), detail=1)
 
-        work = self.image.copy().astype('uint8')
+        work = self.image.copy().astype("uint8")
         detection = (
             InterpretNumber._ocr.readtext(work, **args)
             # Add border & try again
-            or InterpretNumber._ocr.readtext(_add_border(work, 10).astype('uint8'), **args)
+            or InterpretNumber._ocr.readtext(
+                _add_border(work, 10).astype("uint8"), **args
+            )
         )
         if detection:
             return detection[0][1:]
@@ -103,5 +104,5 @@ class InterpretNumber:
 
 def test_1():
     # some_test = random.sample(all_other_images, 10)
-    for img in Path(r'E:\nonogram_player\screenshots\nr').rglob('*.png'):
+    for img in Path(r"E:\nonogram_player\screenshots\nr").rglob("*.png"):
         assert InterpretNumber(img).most_likely == img.parent.name

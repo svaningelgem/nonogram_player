@@ -10,13 +10,14 @@ from typing import Dict, Generator, List, Union
 import cv2
 import numpy as np
 from PIL import ImageOps
-from PIL.Image import Image, fromarray, open as imopen
+from PIL.Image import Image, fromarray
+from PIL.Image import open as imopen
 
-screenshots_path = Path(__file__).parent / '../screenshots'
-screenshots_levels_path = screenshots_path / 'levels'
-processed_path = screenshots_path / 'processed'
-numbers_path = screenshots_path / 'new_nr'
-final_numbers_path = screenshots_path / 'nr'
+screenshots_path = Path(__file__).parent / "../screenshots"
+screenshots_levels_path = screenshots_path / "levels"
+processed_path = screenshots_path / "processed"
+numbers_path = screenshots_path / "new_nr"
+final_numbers_path = screenshots_path / "nr"
 
 
 def natural_sort(lst):
@@ -25,49 +26,59 @@ def natural_sort(lst):
         return int(text) if text.isdigit() else text.lower()
 
     def alphanum_key(key):
-        return [convert(c) for c in re.split(r'([0-9]+)', str(key))]
+        return [convert(c) for c in re.split(r"([0-9]+)", str(key))]
 
     return sorted(lst, key=alphanum_key)
 
 
-all_final_number_files = natural_sort(final_numbers_path.rglob('*.png'))
+all_final_number_files = natural_sort(final_numbers_path.rglob("*.png"))
 
 # Create all these paths
-for x in list(globals().values()):  # Need to wrap it in a list because otherwise things might change during processing
+for x in list(
+    globals().values()
+):  # Need to wrap it in a list because otherwise things might change during processing
     if isinstance(x, Path):
         x.mkdir(parents=True, exist_ok=True)
 
 
 counter = 0
 
-TLWH = namedtuple('TLWH', 'x y w h')
+TLWH = namedtuple("TLWH", "x y w h")
 pure_white = (255, 255, 255)
 white = 255
-tab_background = (0xeb, 0xef, 0xf7)
+tab_background = (0xEB, 0xEF, 0xF7)
 magenta = (255, 0, 255)
 
 ImageType = Union[str, Path, Image, np.ndarray]
 
 
-def save(img: Union[Image, np.ndarray], subfolder: str = '', *, increasing: bool = False) -> Path:
+def save(
+    img: Union[Image, np.ndarray], subfolder: str = "", *, increasing: bool = False
+) -> Path:
     if subfolder:
-        filename = Path(__file__).parent / f'../screenshots/{subfolder}/{datetime.now().strftime("%Y-%m-%d %H%M%S")}'
+        filename = (
+            Path(__file__).parent
+            / f'../screenshots/{subfolder}/{datetime.now().strftime("%Y-%m-%d %H%M%S")}'
+        )
     else:
-        filename = Path(__file__).parent / f'../screenshots/{datetime.now().strftime("%Y-%m-%d %H%M%S")}'
+        filename = (
+            Path(__file__).parent
+            / f'../screenshots/{datetime.now().strftime("%Y-%m-%d %H%M%S")}'
+        )
 
     if increasing:
         global counter
-        filename = filename.parent / f'{counter}.png'
+        filename = filename.parent / f"{counter}.png"
         counter += 1
         target = filename
     else:
         filename = str(filename)
-        nr = ''
+        nr = ""
         n = 0
-        ext = '.png'
+        ext = ".png"
         while os.path.exists(filename + nr + ext):
             n += 1
-            nr = f'_{n}'
+            nr = f"_{n}"
 
         target = Path(filename + nr + ext)
 
@@ -83,12 +94,12 @@ def save(img: Union[Image, np.ndarray], subfolder: str = '', *, increasing: bool
 
 def remove_duplicate_images(from_path: Path) -> None:
     hashes: Dict[str, List[Path]] = defaultdict(list)
-    for file in from_path.rglob('*.png'):
+    for file in from_path.rglob("*.png"):
         hashes[md5hash(file)].append(file)
 
     for hsh, file_list in hashes.items():
         for file in natural_sort(file_list)[1:]:
-            print('Removing duplicate', file)
+            print("Removing duplicate", file)
             file.unlink()
 
 
@@ -119,7 +130,7 @@ def _scale_image_to_100x100(original_image: Image, w=100, h=100) -> np.ndarray:
     max_ = max(im.shape[:2])
 
     # make a max_ by max_ image
-    background = np.zeros(shape=(max_, max_, 3), dtype='uint8')
+    background = np.zeros(shape=(max_, max_, 3), dtype="uint8")
     # Set the background to white
     background[:] = (255, 255, 255)
 
@@ -128,12 +139,16 @@ def _scale_image_to_100x100(original_image: Image, w=100, h=100) -> np.ndarray:
     center_y = (max_ - im.shape[1]) // 2
 
     # And paste the original image on it.
-    background[center_x:center_x+im.shape[0], center_y:center_y+im.shape[1]] = im
+    background[
+        center_x: center_x + im.shape[0], center_y: center_y + im.shape[1]
+    ] = im
 
     # save(background)
 
     # And now resize the image from (max, max) -> (100, 100)
-    new_img: Image = cv2.resize(background, dsize=(w, h), interpolation=cv2.INTER_NEAREST)
+    new_img: Image = cv2.resize(
+        background, dsize=(w, h), interpolation=cv2.INTER_NEAREST
+    )
     # save(new_img)
 
     return new_img
@@ -161,7 +176,7 @@ def convert_image_to_numpy(image: ImageType) -> np.ndarray:
         image = imopen(image)
 
     if isinstance(image, Image):
-        image = np.array(image.convert('RGB'))
+        image = np.array(image.convert("RGB"))
 
     return image.copy()
 
@@ -176,7 +191,7 @@ def convert_image_to_pil(image: ImageType) -> Image:
     if isinstance(image, np.ndarray):
         image = fromarray(image)
 
-    return image.copy().convert('RGB')
+    return image.copy().convert("RGB")
 
 
 def skip_whites(img: np.ndarray, start_row: int = 0) -> int:

@@ -1,6 +1,6 @@
 from src.fake_player import FakePlayer
 
-app_name = 'com.easybrain.nonogram'
+app_name = "com.easybrain.nonogram"
 
 player = FakePlayer()
 while player.foreground_app != app_name:

@@ -1,4 +1,3 @@
-
 class NonoGramError(ValueError):
     ...
 

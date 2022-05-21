@@ -18,6 +18,7 @@ class PlayingField:
     """
     Takes in an image, and solves it.
     """
+
     image: ImageType = field(repr=False)
 
     def __post_init__(self):
@@ -27,26 +28,33 @@ class PlayingField:
     def _get_interpreted_numbers(sidebar: List[List[np.ndarray]]):
         return [
             [
-                int(''.join(
-                    InterpretNumber(additional_number).most_likely
-                    for additional_number in split_in_separate_numbers(nr_img)
-                ))
+                int(
+                    "".join(
+                        InterpretNumber(additional_number).most_likely
+                        for additional_number in split_in_separate_numbers(nr_img)
+                    )
+                )
                 for nr_img in nr_tab
             ]
             for nr_tab in sidebar
         ]
 
     @staticmethod
-    def _solve_generic(solution: np.ndarray, sidebar: List[List[int]], horizontal: bool):
+    def _solve_generic(
+        solution: np.ndarray, sidebar: List[List[int]], horizontal: bool
+    ):
         numbers = sidebar
 
         if horizontal:
+
             def get_line(idx):
                 return solution[idx]
 
             def set_line(idx, value):
                 solution[idx] = value
+
         else:
+
             def get_line(idx):
                 return solution[:, idx]
 
@@ -85,7 +93,7 @@ class PlayingField:
         left = self._get_interpreted_numbers(grid.left.nr_imgs)
         top = self._get_interpreted_numbers(grid.top.nr_imgs)
 
-        solution = np.zeros(shape=(len(left), len(top)), dtype='int8')
+        solution = np.zeros(shape=(len(left), len(top)), dtype="int8")
 
         begin = None
         while begin is None or np.any(begin != solution):

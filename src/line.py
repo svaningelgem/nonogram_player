@@ -14,18 +14,18 @@ class Line:
         self._inner = [unknown] * len_
 
     @dispatch(list)
-    def __init__(self, fields: List[int]):
+    def __init__(self, fields: List[int]):  # noqa: F811
         self._inner = fields.copy()
 
     @dispatch(np.ndarray)
-    def __init__(self, fields: np.ndarray):
+    def __init__(self, fields: np.ndarray):  # noqa: F811
         self._inner = list(fields)
 
     def __len__(self):
         return len(self._inner)
 
     @staticmethod
-    def ltrim(line) -> 'Line':
+    def ltrim(line) -> "Line":
         line = line.copy()
 
         # ltrim the list
@@ -35,7 +35,7 @@ class Line:
         return line
 
     @staticmethod
-    def rtrim(line) -> 'Line':
+    def rtrim(line) -> "Line":
         line = line.copy()
 
         # rtrim the list
@@ -64,13 +64,10 @@ class Line:
         return iter(self._inner)
 
     def __repr__(self) -> str:
-        return str(['x' if x is cross else x for x in self._inner])
+        return str(["x" if x is cross else x for x in self._inner])
 
     def __eq__(self, other) -> bool:
-        return (
-            type(self) == type(other)
-            and self._inner == other._inner
-        )
+        return type(self) == type(other) and self._inner == other._inner
 
     def __getitem__(self, index: int) -> int:
         return self._inner[index]
@@ -81,13 +78,10 @@ class Line:
 
         self._inner[index] = value
 
-    def fill_unknown_with_cross(self) -> 'Line':
-        return Line([
-            x if x != unknown else cross
-            for x in self._inner
-        ])
+    def fill_unknown_with_cross(self) -> "Line":
+        return Line([x if x != unknown else cross for x in self._inner])
 
-    def can_merge(self, other: 'Line') -> bool:
+    def can_merge(self, other: "Line") -> bool:
         assert isinstance(other, Line)
         assert len(other) == len(self._inner)
 
@@ -97,11 +91,13 @@ class Line:
 
             # here both are known
             if mine != incoming:  # but not the same? >> Can't merge!
-                raise NotMatchingChars(f'Position {idx}: confirmed: {mine}, incoming: {incoming}')
+                raise NotMatchingChars(
+                    f"Position {idx}: confirmed: {mine}, incoming: {incoming}"
+                )
 
         return True
 
-    def merge(self, other: 'Line'):
+    def merge(self, other: "Line"):
         self.can_merge(other)
 
         for idx, (mine, incoming) in enumerate(zip(self._inner, other)):

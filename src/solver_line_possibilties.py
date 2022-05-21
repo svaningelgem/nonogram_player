@@ -40,9 +40,13 @@ class LinePossibilityGenerator:
 
         return tmp
 
-    def _expand_spaces(self, line: Line, which_one: int, spaces_left: int, start_index: int = 0) -> Generator[Line, None, None]:
+    def _expand_spaces(
+        self, line: Line, which_one: int, spaces_left: int, start_index: int = 0
+    ) -> Generator[Line, None, None]:
         try:
-            se: SpaceExpander = self.inner[which_one * 2]  # This is the one we will enlarge in this recursion
+            se: SpaceExpander = self.inner[
+                which_one * 2
+            ]  # This is the one we will enlarge in this recursion
         except IndexError:
             yield line.fill_unknown_with_cross()
             return
@@ -68,13 +72,16 @@ class LinePossibilityGenerator:
                 except IndexError:
                     return
 
-            yield from self._expand_spaces(current_line, which_one + 1, spaces_left - spaces, start_index + spaces + nb.length)
-
-        a = 1
+            yield from self._expand_spaces(
+                current_line,
+                which_one + 1,
+                spaces_left - spaces,
+                start_index + spaces + nb.length,
+            )
 
     def __iter__(self) -> Generator[Line, None, None]:
         yield from self._expand_spaces(
             Line(self.max_line_length),
             0,
-            spaces_left=self.max_line_length - sum(self.nrs)
+            spaces_left=self.max_line_length - sum(self.nrs),
         )

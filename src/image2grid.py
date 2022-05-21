@@ -15,11 +15,11 @@ class Image2Grid:
         self.tabs_left = self.tabs_top = None
 
     def _get_bars(self, img: Image, *, left=False) -> HintTab:
-        tab = HintTab(direction='left' if left else 'top', img=img)
+        tab = HintTab(direction="left" if left else "top", img=img)
         if left:
-            line = tab.arr[:,100]
+            line = tab.arr[:, 100]
         else:
-            line = tab.arr[100,:]
+            line = tab.arr[100, :]
 
         # Get spaces of (at least 1) white pixel
         space_start = None
@@ -50,12 +50,19 @@ class Image2Grid:
         return self._get_bars(cropped, left=left)
 
     def _crop_data(self, *, left=False):
-        def column_selection(arr: np.ndarray, start: int, stop: int = None, *, horizontal: bool, w: int = 1):
+        def column_selection(
+            arr: np.ndarray,
+            start: int,
+            stop: int = None,
+            *,
+            horizontal: bool,
+            w: int = 1,
+        ):
             if stop is None:
                 stop = start + w
 
             if horizontal:
-                return arr[:,start:stop]
+                return arr[:, start:stop]
             else:
                 return arr[start:stop]
 
@@ -73,8 +80,10 @@ class Image2Grid:
 
         return flood_fill_point, h, v
 
-    def _my_floodfill(self, original: np.ndarray, pt: tuple, threshold: int = 200) -> np.ndarray:
-        img = original.copy().astype('int32')
+    def _my_floodfill(
+        self, original: np.ndarray, pt: tuple, threshold: int = 200
+    ) -> np.ndarray:
+        img = original.copy().astype("int32")
 
         x, y = pt
 
@@ -86,7 +95,7 @@ class Image2Grid:
         mask = mask_r + mask_g + mask_b
         img[mask <= threshold] = 255
 
-        return img.astype('uint8')
+        return img.astype("uint8")
 
     def crop_numbers(self, *, left: bool = False, do_save: bool = False) -> HintTab:
         flood_fill_point, hor_selection, ver_selection = self._crop_data(left=left)
@@ -105,10 +114,13 @@ class Image2Grid:
         elif len(tab_data) == 20:  # level 4
             min_width = 11
         else:
-            raise ValueError(f"Can't do this yet! Got {len(tab_data)} tabs. File saved as: {save(tab_data.img)}.")
+            raise ValueError(
+                f"Can't do this yet! Got {len(tab_data)} tabs. File saved as: {save(tab_data.img)}."
+            )
 
         whitened = self._my_floodfill(tab_data.arr, flood_fill_point, 200)
-        if do_save: save(whitened)
+        if do_save:
+            save(whitened)
 
         for idx, tab in enumerate(tab_data.shapes):
             tmp2 = ver_selection(whitened, *tab)
@@ -133,19 +145,23 @@ class Image2Grid:
 
                     # Skip to first col that isn't pure white
                     col += min_width + 1
-                    while col < max_col and np.all(hor_selection(tmp3, col) == pure_white):
+                    while col < max_col and np.all(
+                        hor_selection(tmp3, col) == pure_white
+                    ):
                         col += 1
 
                     nr_start = col
 
                 col += 1
 
-            found_nr_img = hor_selection(tmp3, nr_start, col+1)
+            found_nr_img = hor_selection(tmp3, nr_start, col + 1)
             tab_data.nr_imgs[idx].append(found_nr_img)
 
-            if do_save: save(found_nr_img, f'nr')
+            if do_save:
+                save(found_nr_img, "nr")
 
-            if do_save: save(hor_selection(tmp3, nr_start, col+1), 'nr')
+            if do_save:
+                save(hor_selection(tmp3, nr_start, col + 1), "nr")
 
         return tab_data
 
