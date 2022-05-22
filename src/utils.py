@@ -85,9 +85,9 @@ def save(
     target.parent.mkdir(parents=True, exist_ok=True)
 
     if isinstance(img, np.ndarray):
-        img = fromarray(img)
-
-    img.save(str(target))
+        cv2.imwrite(str(target), img)
+    else:
+        img.save(str(target))
 
     return target
 

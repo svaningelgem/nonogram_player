@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from math import sqrt
 from pathlib import Path
@@ -7,7 +8,9 @@ import numpy as np
 from PIL.Image import Image
 from easyocr import Reader
 
-from src.utils import ImageType, scale_to_100x100
+from src.utils import ImageType, save, scale_to_100x100
+
+logger = logging.getLogger(__name__)
 
 
 def _extract_pure_image(img_path: Union[Path, str, Image, np.ndarray]) -> np.ndarray:
@@ -45,6 +48,7 @@ class InterpretNumber:
     }
 
     image: ImageType
+    iteration: int = 0
 
     def __post_init__(self):
         self.image = _extract_pure_image(self.image)
@@ -68,14 +72,26 @@ class InterpretNumber:
         return preds_sorted
 
     @property
-    def most_likely(self):
+    def most_likely(self) -> str:
+        """
+        returns a list of potential numbers. Most likely is first.
+        If an OCR detection was waranted, and it didn't find anything >>
+            Return a list of the first x (within 5% of the first found number)
+        """
         preds = self._detect_via_numpy_subtraction()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Saving image to: %s', save(self.image, subfolder='debug', increasing=True))
+            logger.debug('preds: %s', preds)
 
         # Too little difference between the first 2. --> I'm not sure this is the right one then!
         if preds[0][1] - preds[1][1] < 0.05:
             ocr_detection = self._detect_via_ocr()
+            logger.debug('ocr_detection: %s', ocr_detection)
             if ocr_detection:
                 return ocr_detection[0]
+            else:
+                # Something went wrong in another loop... So we'll need to try something else here!
+                return preds[self.iteration][0]
 
         return preds[0][0]
 

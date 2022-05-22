@@ -15,7 +15,6 @@ from ppadb.device import Device
 from src.playing_field import PlayingField
 from src.utils import filled, save
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app_name = "com.easybrain.nonogram"

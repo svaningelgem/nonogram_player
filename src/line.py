@@ -82,7 +82,7 @@ class Line:
         return Line([x if x != unknown else cross for x in self._inner])
 
     def can_merge(self, other: "Line") -> bool:
-        assert isinstance(other, Line)
+        assert isinstance(other, Line), f'other is type {type(other)}. Should be "Line"!'
         assert len(other) == len(self._inner)
 
         for idx, mine, incoming in zip(count(), self._inner, other):
