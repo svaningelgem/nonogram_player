@@ -17,6 +17,22 @@ from .utils import ImageType, convert_image_to_numpy, save, split_in_separate_nu
 logger = logging.getLogger(__name__)
 
 
+def _get_line_horizontal(solution, idx):
+    return solution[idx]
+
+
+def _set_line_horizontal(solution, idx, value):
+    solution[idx] = value
+
+
+def _get_line_vertical(solution, idx):
+    return solution[:, idx]
+
+
+def _set_line_vertical(solution, idx, value):
+    solution[:, idx] = value
+
+
 @dataclass
 class PlayingField:
     """
@@ -43,50 +59,33 @@ class PlayingField:
             for nr_tab in sidebar
         ]
 
-    @staticmethod
-    def _solve_generic(
-        solution: np.ndarray, sidebar: List[List[int]], horizontal: bool
-    ):
-        numbers = sidebar
-
-        if horizontal:
-
-            def get_line(idx):
-                return solution[idx]
-
-            def set_line(idx, value):
-                solution[idx] = value
-
-        else:
-
-            def get_line(idx):
-                return solution[:, idx]
-
-            def set_line(idx, value):
-                solution[:, idx] = value
+    def _solve_generic(self, solution: np.ndarray, numbers: List[List[int]], horizontal: bool):
+        get_line = _get_line_horizontal if horizontal else _get_line_vertical
+        set_line = _set_line_horizontal if horizontal else _set_line_vertical
 
         for line_idx, nrs in enumerate(numbers):
+            current_line = get_line(solution, line_idx)
+            if np.all(current_line != unknown):
+                continue
+
+            current_line = Line(current_line)
+            grid_size = len(numbers)
+            common_fields = CommonLineFields()
+
             try:
-                current_line = get_line(line_idx)
-                if np.all(current_line != unknown):
-                    continue
-
-                current_line = Line(current_line)
-
-                common_fields = CommonLineFields()
-
-                for possibility in LinePossibilityGenerator(len(numbers), nrs):
+                for possibility in LinePossibilityGenerator(grid_size, nrs):
                     try:
                         current_line.can_merge(possibility)
                     except NotMatchingChars:
                         continue
 
                     common_fields.intersect(possibility)
+
             except NoSimilaritiesFound:
                 continue
 
             current_line.merge(common_fields.line)
-            set_line(line_idx, current_line)
+            set_line(solution, line_idx, current_line)
 
     @cached_property
     def grid(self) -> Grid:
