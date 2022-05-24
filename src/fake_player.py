@@ -1,4 +1,5 @@
 import logging
+import subprocess
 import sys
 import time
 from functools import cache
@@ -46,7 +47,16 @@ class FakePlayer:
             host="127.0.0.1", port=5037
         )  # Default is "127.0.0.1" and 5037
 
-        self._devices = self._client.devices()
+        try:
+            self._devices = self._client.devices()
+        except RuntimeError as ex:
+            if 'Is adb running on your computer' not in str(ex):
+                raise
+
+            # Try to start adb service
+            subprocess.run(['adb', 'start-server'], capture_output=True)
+            # And get the devices again.
+            self._devices = self._client.devices()
 
         if len(self._devices) == 0:
             logger.error("No devices")
