@@ -221,3 +221,48 @@ class FakePlayer:
 
         logger.info(" > Finished")
         time.sleep(5)  # Wait for the ending animation to finish
+
+    @staticmethod
+    def _create_circular_mask(h, w, center=None, radius=None):
+        # https://newbedev.com/how-can-i-create-a-circular-mask-for-a-numpy-array
+        if center is None: # use the middle of the image
+            center = (int(w/2), int(h/2))
+        if radius is None: # use the smallest distance between the center and image walls
+            radius = min(center[0], center[1], w-center[0], h-center[1])
+
+        Y, X = np.ogrid[:h, :w]
+        dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
+
+        mask = dist_from_center <= radius
+        return mask
+
+    def click_next_adventure(self):
+        img = np.array(self.screencap())
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        gray = cv2.blur(gray, (3, 3))
+
+        my_screensize = 1440*3120
+        yours = img.shape[0]*img.shape[1]
+        relation = my_screensize/yours
+
+        circles = cv2.HoughCircles(
+            gray, cv2.HOUGH_GRADIENT, dp=1.0, minDist=int(100 * relation), param1=50, param2=26,
+            minRadius=int(112 * relation), maxRadius=int(118 * relation)
+        )
+
+        assert circles is not None
+
+        circles = circles[0]
+
+        # Find the circle that is blue.
+        counter = 0
+        for cir in circles:
+            cir = np.round(cir).astype("int")
+
+            x, y, r = cir
+            mask = self._create_circular_mask(*img.shape[:2], (x, y), r)
+            img2 = img.copy()
+            img2[~mask] = 0
+
+            save(img2)
+        a = 1
