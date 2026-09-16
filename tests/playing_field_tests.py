@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+
 from src.playing_field import PlayingField
 from tests.conftest import all_levels
 
@@ -22,14 +23,18 @@ def test_simple_one(first_level):
     ]
 
 
-@pytest.mark.parametrize("screenshot", all_levels(), ids=lambda x: f"{x.parent.name}/{x.name}")
+@pytest.mark.parametrize(
+    "screenshot", all_levels(), ids=lambda x: f"{x.parent.name}/{x.name}"
+)
 def test_all(screenshot):
     # We're not doing anything here with it, but it shouldn't fail.
     PlayingField(screenshot).solution
 
 
 def test_failing_screenshots():
-    source = Path(__file__).parent / "resources/failing_screenshots/2022-05-21 204409.png"
+    source = (
+        Path(__file__).parent / "resources/failing_screenshots/2022-05-21 204409.png"
+    )
 
     field = PlayingField(source)
 

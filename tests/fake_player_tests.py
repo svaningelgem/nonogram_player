@@ -17,7 +17,9 @@ def test_tap_swipes():
 
     field_rect = (290, 971, 1116, 1105)
 
-    commands = list(FakePlayer._adjust_solution_in_taps_and_swipes(solution, *field_rect))
+    commands = list(
+        FakePlayer._adjust_solution_in_taps_and_swipes(solution, *field_rect)
+    )
     assert commands == [
         "input swipe 569 1026 792 1026 225",
         "input swipe 457 1136 903 1136 375",

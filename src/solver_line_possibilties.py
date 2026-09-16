@@ -44,7 +44,9 @@ class LinePossibilityGenerator:
         self, line: Line, which_one: int, spaces_left: int, start_index: int = 0
     ) -> Generator[Line, None, None]:
         try:
-            se: SpaceExpander = self.inner[which_one * 2]  # This is the one we will enlarge in this recursion
+            se: SpaceExpander = self.inner[
+                which_one * 2
+            ]  # This is the one we will enlarge in this recursion
         except IndexError:
             yield line.fill_unknown_with_cross()
             return
