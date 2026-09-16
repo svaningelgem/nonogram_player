@@ -1,0 +1,28 @@
+[project]
+name = "nonogram-player"
+version = "0.0.0"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "pure-python-adb",
+    "Pillow",
+    "numpy",
+    "tensorflow",
+    "scipy",
+    "notebook",
+    "matplotlib",
+    "multipledispatch",
+    "opencv-python",
+    "opencv-contrib-python",
+    "scikit-image",
+    "pandas",
+    "scikit-learn",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-lazy-fixture",
+]
+
+[tool.uv]
+package = false
