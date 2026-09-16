@@ -1,5 +1,4 @@
 from itertools import count
-from typing import List
 
 import numpy as np
 from multipledispatch import dispatch
@@ -14,7 +13,7 @@ class Line:
         self._inner = [unknown] * len_
 
     @dispatch(list)
-    def __init__(self, fields: List[int]):  # noqa: F811
+    def __init__(self, fields: list[int]):  # noqa: F811
         self._inner = fields.copy()
 
     @dispatch(np.ndarray)
@@ -91,9 +90,7 @@ class Line:
 
             # here both are known
             if mine != incoming:  # but not the same? >> Can't merge!
-                raise NotMatchingChars(
-                    f"Position {idx}: confirmed: {mine}, incoming: {incoming}"
-                )
+                raise NotMatchingChars(f"Position {idx}: confirmed: {mine}, incoming: {incoming}")
 
         return True
 

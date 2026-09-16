@@ -2,9 +2,9 @@ import logging
 import subprocess
 import sys
 import time
+from collections.abc import Generator
 from functools import cache
 from io import BytesIO
-from typing import Generator, List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -24,7 +24,7 @@ app_name = "com.easybrain.nonogram"
 class FakePlayer:
     _client: Client = None
     _device: Device = None
-    _devices: List[Device] = None
+    _devices: list[Device] = None
 
     @property
     def client(self):
@@ -43,18 +43,16 @@ class FakePlayer:
 
     @cache
     def _connect(self):
-        self._client = Client(
-            host="127.0.0.1", port=5037
-        )  # Default is "127.0.0.1" and 5037
+        self._client = Client(host="127.0.0.1", port=5037)  # Default is "127.0.0.1" and 5037
 
         try:
             self._devices = self._client.devices()
         except RuntimeError as ex:
-            if 'Is adb running on your computer' not in str(ex):
+            if "Is adb running on your computer" not in str(ex):
                 raise
 
             # Try to start adb service
-            subprocess.run(['adb', 'start-server'], capture_output=True)
+            subprocess.run(["adb", "start-server"], capture_output=True)
             # And get the devices again.
             self._devices = self._client.devices()
 
@@ -85,7 +83,7 @@ class FakePlayer:
 
     def _get_contours(
         self, threshold: int = 10, screen: np.ndarray = None
-    ) -> Tuple[np.ndarray, Tuple[np.ndarray], np.ndarray]:
+    ) -> tuple[np.ndarray, tuple[np.ndarray], np.ndarray]:
         src = np.array(screen or self.screencap())
         gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
         gray = cv2.blur(gray, (3, 3))
@@ -94,14 +92,12 @@ class FakePlayer:
         canny_output = cv2.Canny(gray, threshold, threshold * 2)
 
         # Find contours
-        contours, hierarchy = cv2.findContours(
-            canny_output, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, hierarchy = cv2.findContours(canny_output, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         return src, contours, hierarchy
 
-    def get_big_button_click_coordinates(self) -> Tuple[int, int]:
-        src, contours, hierarchy = self._get_contours()
+    def get_big_button_click_coordinates(self) -> tuple[int, int]:
+        src, contours, _hierarchy = self._get_contours()
         w = src.shape[0]
         h = src.shape[0]
         bottom_part = h - (h // 3.5)
@@ -139,11 +135,11 @@ class FakePlayer:
         self.device.shell(f"input tap {center[0]} {center[1]}")
         time.sleep(1)
 
-    def get_playing_field_area(self, screen=None) -> Tuple[int, int, int, int]:
+    def get_playing_field_area(self, screen=None) -> tuple[int, int, int, int]:
         """
         returns topleft-x/y, width, height
         """
-        src, contours, hierarchy = self._get_contours(screen=screen)
+        _src, contours, _hierarchy = self._get_contours(screen=screen)
         max_contour = max(contours, key=lambda c: cv2.contourArea(c))
 
         x = max_contour[:, :, 0]
@@ -158,13 +154,13 @@ class FakePlayer:
 
     @staticmethod
     def _adjust_solution_in_taps_and_swipes(
-        solution: List[List[int]], x: int, y: int, w: int, h: int, duration_per_field=75
+        solution: list[list[int]], x: int, y: int, w: int, h: int, duration_per_field=75
     ) -> Generator[str, None, None]:
         row_height = h / len(solution)
         col_width = w / len(solution[0])
 
-        start_x: Optional[int] = None
-        end_x: Optional[int] = None
+        start_x: int | None = None
+        end_x: int | None = None
 
         def add(reset=False) -> Generator[str, None, None]:
             nonlocal start_x, end_x
@@ -176,10 +172,7 @@ class FakePlayer:
                     if start_x != end_x:  # Swipe
                         amount_of_fields = round((end_x - start_x) / col_width) + 1
                         yield (
-                            "input swipe "
-                            f"{start_x} {click_y} "
-                            f"{end_x} {click_y} "
-                            f"{amount_of_fields * duration_per_field}"
+                            f"input swipe {start_x} {click_y} {end_x} {click_y} {amount_of_fields * duration_per_field}"
                         )
                     else:
                         yield f"input tap {start_x} {click_y}"
@@ -225,13 +218,13 @@ class FakePlayer:
     @staticmethod
     def _create_circular_mask(h, w, center=None, radius=None):
         # https://newbedev.com/how-can-i-create-a-circular-mask-for-a-numpy-array
-        if center is None: # use the middle of the image
-            center = (int(w/2), int(h/2))
-        if radius is None: # use the smallest distance between the center and image walls
-            radius = min(center[0], center[1], w-center[0], h-center[1])
+        if center is None:  # use the middle of the image
+            center = (int(w / 2), int(h / 2))
+        if radius is None:  # use the smallest distance between the center and image walls
+            radius = min(center[0], center[1], w - center[0], h - center[1])
 
         Y, X = np.ogrid[:h, :w]
-        dist_from_center = np.sqrt((X - center[0])**2 + (Y-center[1])**2)
+        dist_from_center = np.sqrt((X - center[0]) ** 2 + (Y - center[1]) ** 2)
 
         mask = dist_from_center <= radius
         return mask
@@ -241,13 +234,19 @@ class FakePlayer:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray = cv2.blur(gray, (3, 3))
 
-        my_screensize = 1440*3120
-        yours = img.shape[0]*img.shape[1]
-        relation = my_screensize/yours
+        my_screensize = 1440 * 3120
+        yours = img.shape[0] * img.shape[1]
+        relation = my_screensize / yours
 
         circles = cv2.HoughCircles(
-            gray, cv2.HOUGH_GRADIENT, dp=1.0, minDist=int(100 * relation), param1=50, param2=26,
-            minRadius=int(112 * relation), maxRadius=int(118 * relation)
+            gray,
+            cv2.HOUGH_GRADIENT,
+            dp=1.0,
+            minDist=int(100 * relation),
+            param1=50,
+            param2=26,
+            minRadius=int(112 * relation),
+            maxRadius=int(118 * relation),
         )
 
         assert circles is not None
@@ -255,7 +254,6 @@ class FakePlayer:
         circles = circles[0]
 
         # Find the circle that is blue.
-        counter = 0
         for cir in circles:
             cir = np.round(cir).astype("int")
 
@@ -265,4 +263,3 @@ class FakePlayer:
             img2[~mask] = 0
 
             save(img2)
-        a = 1
