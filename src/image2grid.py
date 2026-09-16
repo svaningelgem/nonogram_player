@@ -6,7 +6,7 @@ from PIL.Image import Image, fromarray
 
 from src.grid import Grid
 from src.hint_tab import HintTab
-from src.utils import ImageType, TLWH, convert_image_to_pil, pure_white, save
+from src.utils import TLWH, ImageType, convert_image_to_pil, pure_white, save
 
 
 class Image2Grid:
@@ -35,7 +35,7 @@ class Image2Grid:
 
         # Last one
         tab.shapes.append((tab_start, len(line)))
-        tab.nr_imgs = [list() for _ in range(len(tab))]
+        tab.nr_imgs = [[] for _ in range(len(tab))]
 
         return tab
 
@@ -53,7 +53,7 @@ class Image2Grid:
         def column_selection(
             arr: np.ndarray,
             start: int,
-            stop: int = None,
+            stop: int | None = None,
             *,
             horizontal: bool,
             w: int = 1,
@@ -80,9 +80,7 @@ class Image2Grid:
 
         return flood_fill_point, h, v
 
-    def _my_floodfill(
-        self, original: np.ndarray, pt: tuple, threshold: int = 200
-    ) -> np.ndarray:
+    def _my_floodfill(self, original: np.ndarray, pt: tuple, threshold: int = 200) -> np.ndarray:
         img = original.copy().astype("int32")
 
         x, y = pt
@@ -105,18 +103,12 @@ class Image2Grid:
         else:
             self.tabs_top = tab_data
 
-        if len(tab_data) == 5:  # level 1
-            min_width = 15
-        elif len(tab_data) == 10:  # level 2
-            min_width = 15
-        elif len(tab_data) == 15:  # level 3
+        if len(tab_data) == 5 or len(tab_data) == 10 or len(tab_data) == 15:  # level 1
             min_width = 15
         elif len(tab_data) == 20:  # level 4
             min_width = 11
         else:
-            raise ValueError(
-                f"Can't do this yet! Got {len(tab_data)} tabs. File saved as: {save(tab_data.img)}."
-            )
+            raise ValueError(f"Can't do this yet! Got {len(tab_data)} tabs. File saved as: {save(tab_data.img)}.")
 
         whitened = self._my_floodfill(tab_data.arr, flood_fill_point, 200)
         if do_save:
@@ -145,9 +137,7 @@ class Image2Grid:
 
                     # Skip to first col that isn't pure white
                     col += min_width + 1
-                    while col < max_col and np.all(
-                        hor_selection(tmp3, col) == pure_white
-                    ):
+                    while col < max_col and np.all(hor_selection(tmp3, col) == pure_white):
                         col += 1
 
                     nr_start = col

@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import List
 
 import numpy as np
 
@@ -45,7 +44,7 @@ class PlayingField:
     def __post_init__(self):
         self.image = convert_image_to_numpy(self.image)
 
-    def _get_interpreted_numbers(self, sidebar: List[List[np.ndarray]]):
+    def _get_interpreted_numbers(self, sidebar: list[list[np.ndarray]]):
         return [
             [
                 int(
@@ -59,7 +58,7 @@ class PlayingField:
             for nr_tab in sidebar
         ]
 
-    def _solve_generic(self, solution: np.ndarray, numbers: List[List[int]], horizontal: bool):
+    def _solve_generic(self, solution: np.ndarray, numbers: list[list[int]], horizontal: bool):
         get_line = _get_line_horizontal if horizontal else _get_line_vertical
         set_line = _set_line_horizontal if horizontal else _set_line_vertical
 
@@ -92,11 +91,11 @@ class PlayingField:
         return Image2Grid(self.image).grid
 
     @property
-    def left(self) -> List[List[int]]:
+    def left(self) -> list[list[int]]:
         return self._get_interpreted_numbers(self.grid.left.nr_imgs)
 
     @property
-    def top(self) -> List[List[int]]:
+    def top(self) -> list[list[int]]:
         return self._get_interpreted_numbers(self.grid.top.nr_imgs)
 
     def _solve(self) -> np.ndarray:
@@ -114,11 +113,10 @@ class PlayingField:
 
             if np.all(solution != unknown):
                 return solution  # Ok, solved!
-        else:
-            raise CannotSolve
+        raise CannotSolve
 
     @cached_property
-    def solution(self) -> List[List[int]]:
+    def solution(self) -> list[list[int]]:
         for i in range(3):  # Max 3 iterations:
             self.iteration = i
             try:
@@ -126,6 +124,4 @@ class PlayingField:
             except AssertionError:
                 pass
 
-        logger.error('Failing to solve this!! >> Saved as: %s', save(self.image))
-
-
+        logger.error("Failing to solve this!! >> Saved as: %s", save(self.image))

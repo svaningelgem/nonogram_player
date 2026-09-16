@@ -1,13 +1,13 @@
 In `play_level` add `save_screenshot`:
 ```python
 for command in self._adjust_solution_in_taps_and_swipes(solution, *field_rect):
-    self.save_screenshot('to_gif')
+    self.save_screenshot("to_gif")
 ```
 
 After this for-loop:
 Add:
 ```python
-self.save_screenshot('to_gif')
+self.save_screenshot("to_gif")
 ```
 
 
@@ -15,17 +15,17 @@ In `play.py` (basically add every other line the `save_screenshot` command):
 ```python
 from src.fake_player import FakePlayer
 
-app_name = 'com.easybrain.nonogram'
+app_name = "com.easybrain.nonogram"
 
 player = FakePlayer()
-player.save_screenshot('to_gif')
+player.save_screenshot("to_gif")
 while player.foreground_app != app_name:
     player.start_nonogram()
-player.save_screenshot('to_gif')
+player.save_screenshot("to_gif")
 
 try:
     player.click_big_button_at_bottom()
-    player.save_screenshot('to_gif')
+    player.save_screenshot("to_gif")
 except AssertionError:
     # I'm in a level already...
     pass

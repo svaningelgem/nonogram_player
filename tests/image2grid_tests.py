@@ -1,5 +1,4 @@
 from PIL.Image import open as imopen
-
 from src.grid import Grid
 from src.image2grid import Image2Grid
 
@@ -28,9 +27,7 @@ def test_interpret_simple_10x10_grid():
 
 def test_interpret_15x15_grid():
     """15x15 grid."""
-    convertor = Image2Grid(
-        imopen("../screenshots/levels/15/Screenshot_20220512-215823.png")
-    )
+    convertor = Image2Grid(imopen("../screenshots/levels/15/Screenshot_20220512-215823.png"))
     sut = convertor.grid
     assert sut == Grid(
         left=[

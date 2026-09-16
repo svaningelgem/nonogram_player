@@ -1,6 +1,6 @@
+from collections.abc import Generator, Iterator
 from dataclasses import dataclass
 from itertools import count
-from typing import Generator, List, Union
 
 from src.line import Line
 from src.utils import cross, filled
@@ -20,13 +20,13 @@ class NumberBlock:
 
 
 class LinePossibilityGenerator:
-    def __init__(self, max_line_length: int, nrs: List[int]):
+    def __init__(self, max_line_length: int, nrs: list[int]):
         self.max_line_length = max_line_length
         self.nrs = nrs
         self.inner = self._setup()
         self.spaces_left = max_line_length - sum(nrs)
 
-    def _setup(self) -> List[Union[NumberBlock, SpaceExpander]]:
+    def _setup(self) -> list[NumberBlock | SpaceExpander]:
         tmp = []
 
         for idx, nr in enumerate(self.nrs):
@@ -44,9 +44,7 @@ class LinePossibilityGenerator:
         self, line: Line, which_one: int, spaces_left: int, start_index: int = 0
     ) -> Generator[Line, None, None]:
         try:
-            se: SpaceExpander = self.inner[
-                which_one * 2
-            ]  # This is the one we will enlarge in this recursion
+            se: SpaceExpander = self.inner[which_one * 2]  # This is the one we will enlarge in this recursion
         except IndexError:
             yield line.fill_unknown_with_cross()
             return
@@ -79,7 +77,7 @@ class LinePossibilityGenerator:
                 start_index + spaces + nb.length,
             )
 
-    def __iter__(self) -> Generator[Line, None, None]:
+    def __iter__(self) -> Iterator[Line]:
         yield from self._expand_spaces(
             Line(self.max_line_length),
             0,

@@ -2,10 +2,11 @@ import hashlib
 import os
 import re
 from collections import defaultdict, namedtuple
+from collections.abc import Generator
 from datetime import datetime
 from functools import cache
 from pathlib import Path
-from typing import Dict, Generator, List, Union
+from typing import Union
 
 import cv2
 import numpy as np
@@ -34,9 +35,7 @@ def natural_sort(lst):
 all_final_number_files = natural_sort(final_numbers_path.rglob("*.png"))
 
 # Create all these paths
-for x in list(
-    globals().values()
-):  # Need to wrap it in a list because otherwise things might change during processing
+for x in list(globals().values()):  # Need to wrap it in a list because otherwise things might change during processing
     if isinstance(x, Path):
         x.mkdir(parents=True, exist_ok=True)
 
@@ -52,19 +51,11 @@ magenta = (255, 0, 255)
 ImageType = Union[str, Path, Image, np.ndarray]
 
 
-def save(
-    img: Union[Image, np.ndarray], subfolder: str = "", *, increasing: bool = False
-) -> Path:
+def save(img: Image | np.ndarray, subfolder: str = "", *, increasing: bool = False) -> Path:
     if subfolder:
-        filename = (
-            Path(__file__).parent
-            / f'../screenshots/{subfolder}/{datetime.now().strftime("%Y-%m-%d %H%M%S")}'
-        )
+        filename = Path(__file__).parent / f"../screenshots/{subfolder}/{datetime.now().strftime('%Y-%m-%d %H%M%S')}"
     else:
-        filename = (
-            Path(__file__).parent
-            / f'../screenshots/{datetime.now().strftime("%Y-%m-%d %H%M%S")}'
-        )
+        filename = Path(__file__).parent / f"../screenshots/{datetime.now().strftime('%Y-%m-%d %H%M%S')}"
 
     if increasing:
         global counter
@@ -93,23 +84,23 @@ def save(
 
 
 def remove_duplicate_images(from_path: Path) -> None:
-    hashes: Dict[str, List[Path]] = defaultdict(list)
+    hashes: dict[str, list[Path]] = defaultdict(list)
     for file in from_path.rglob("*.png"):
         hashes[md5hash(file)].append(file)
 
-    for hsh, file_list in hashes.items():
+    for file_list in hashes.values():
         for file in natural_sort(file_list)[1:]:
             print("Removing duplicate", file)
             file.unlink()
 
 
 @cache
-def md5hash(file: Union[str, Path]) -> str:
+def md5hash(file: str | Path) -> str:
     return hashlib.md5(Path(file).read_bytes()).hexdigest()
 
 
 @cache
-def is_same_file(file1: Union[str, Path], file2: Union[str, Path]) -> bool:
+def is_same_file(file1: str | Path, file2: str | Path) -> bool:
     return md5hash(file1) == md5hash(file2)
 
 
@@ -139,16 +130,12 @@ def _scale_image_to_100x100(original_image: Image, w=100, h=100) -> np.ndarray:
     center_y = (max_ - im.shape[1]) // 2
 
     # And paste the original image on it.
-    background[
-        center_x: center_x + im.shape[0], center_y: center_y + im.shape[1]
-    ] = im
+    background[center_x : center_x + im.shape[0], center_y : center_y + im.shape[1]] = im
 
     # save(background)
 
     # And now resize the image from (max, max) -> (100, 100)
-    new_img: Image = cv2.resize(
-        background, dsize=(w, h), interpolation=cv2.INTER_NEAREST
-    )
+    new_img: Image = cv2.resize(background, dsize=(w, h), interpolation=cv2.INTER_NEAREST)
     # save(new_img)
 
     return new_img

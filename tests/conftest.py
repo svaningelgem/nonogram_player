@@ -1,12 +1,11 @@
 from functools import cache
 from pathlib import Path
-from typing import List
 
 import pytest
 
 
 @cache
-def all_levels() -> List[Path]:
+def all_levels() -> list[Path]:
     return [
         png
         for directory in ["levels", "processed*"]
