@@ -81,7 +81,9 @@ class Line:
         return Line([x if x != unknown else cross for x in self._inner])
 
     def can_merge(self, other: "Line") -> bool:
-        assert isinstance(other, Line), f'other is type {type(other)}. Should be "Line"!'
+        assert isinstance(other, Line), (
+            f'other is type {type(other)}. Should be "Line"!'
+        )
         assert len(other) == len(self._inner)
 
         for idx, mine, incoming in zip(count(), self._inner, other):
@@ -90,7 +92,9 @@ class Line:
 
             # here both are known
             if mine != incoming:  # but not the same? >> Can't merge!
-                raise NotMatchingChars(f"Position {idx}: confirmed: {mine}, incoming: {incoming}")
+                raise NotMatchingChars(
+                    f"Position {idx}: confirmed: {mine}, incoming: {incoming}"
+                )
 
         return True
 

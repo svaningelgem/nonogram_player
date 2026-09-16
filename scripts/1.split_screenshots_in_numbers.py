@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import cv2
+
 from src.hint_tab import HintTab
 from src.image2grid import Image2Grid
 from src.interpret_number import InterpretNumber
@@ -18,7 +19,9 @@ from src.utils import (
 
 # Split towards numbers
 def split_towards_number_directories(to_path):
-    previous_file_hashes = {md5hash(filename) for filename in processed_path.rglob("*.png")}
+    previous_file_hashes = {
+        md5hash(filename) for filename in processed_path.rglob("*.png")
+    }
 
     for file in screenshots_levels_path.rglob("*.png"):
         if file.parent.name in ["disabled_tab", "empty tab"]:
@@ -43,7 +46,9 @@ def split_towards_number_directories(to_path):
         tmp = Image2Grid(file)
         try:
             calculated_grid = tmp.grid
-        except ValueError as ex:  # ValueError: Can't do this yet! Got 1 tabs. File saved as: ...
+        except (
+            ValueError
+        ) as ex:  # ValueError: Can't do this yet! Got 1 tabs. File saved as: ...
             print(ex)
             continue
 
@@ -52,7 +57,9 @@ def split_towards_number_directories(to_path):
                 for nr_img in nr_images:
                     # Can be > 10 here still!
                     for additional_number in split_in_separate_numbers(nr_img):
-                        which_number_is_it = InterpretNumber(additional_number).most_likely
+                        which_number_is_it = InterpretNumber(
+                            additional_number
+                        ).most_likely
                         save(
                             additional_number,
                             f"{to_path.name}/{which_number_is_it}",

@@ -32,7 +32,9 @@ def _calculate_distance(background: np.ndarray, foreground: np.ndarray) -> float
 
 
 def _add_border(img: np.ndarray, size: int) -> np.ndarray:
-    tmp = np.full((img.shape[0] + size * 2, img.shape[1] + size * 2), 255, dtype=img.dtype)
+    tmp = np.full(
+        (img.shape[0] + size * 2, img.shape[1] + size * 2), 255, dtype=img.dtype
+    )
     tmp[size : img.shape[0] + size, size : img.shape[1] + size] = img
     return tmp
 
@@ -41,7 +43,8 @@ def _add_border(img: np.ndarray, size: int) -> np.ndarray:
 class InterpretNumber:
     _reference_image_path: ClassVar[Path] = Path(__file__).parent / "reference_images"
     _reference_images: ClassVar[dict[str, np.ndarray]] = {
-        path.stem: _extract_pure_image(path) for path in _reference_image_path.glob("*.png")
+        path.stem: _extract_pure_image(path)
+        for path in _reference_image_path.glob("*.png")
     }
 
     image: ImageType
@@ -52,7 +55,10 @@ class InterpretNumber:
 
     def _detect_via_numpy_subtraction(self) -> list[tuple[str, float]]:
         # Calculate all distances.
-        distances = {nr: _calculate_distance(self.image, arr) for nr, arr in self._reference_images.items()}
+        distances = {
+            nr: _calculate_distance(self.image, arr)
+            for nr, arr in self._reference_images.items()
+        }
 
         # Take the worst as a reference point
         worst = max(distances.values())
@@ -74,7 +80,10 @@ class InterpretNumber:
         """
         preds = self._detect_via_numpy_subtraction()
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Saving image to: %s", save(self.image, subfolder="debug", increasing=True))
+            logger.debug(
+                "Saving image to: %s",
+                save(self.image, subfolder="debug", increasing=True),
+            )
             logger.debug("preds: %s", preds)
 
         # Too little difference between the first 2. --> I'm not sure this is the right one then!
@@ -102,7 +111,9 @@ class InterpretNumber:
         detection = (
             InterpretNumber._ocr.readtext(work, **args)
             # Add border & try again
-            or InterpretNumber._ocr.readtext(_add_border(work, 10).astype("uint8"), **args)
+            or InterpretNumber._ocr.readtext(
+                _add_border(work, 10).astype("uint8"), **args
+            )
         )
         if detection:
             return detection[0][1:]

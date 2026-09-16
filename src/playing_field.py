@@ -11,7 +11,13 @@ from .interpret_number import InterpretNumber
 from .line import Line
 from .solver_common_line_fields import CommonLineFields
 from .solver_line_possibilties import LinePossibilityGenerator
-from .utils import ImageType, convert_image_to_numpy, save, split_in_separate_numbers, unknown
+from .utils import (
+    ImageType,
+    convert_image_to_numpy,
+    save,
+    split_in_separate_numbers,
+    unknown,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +55,9 @@ class PlayingField:
             [
                 int(
                     "".join(
-                        InterpretNumber(additional_number, iteration=self.iteration).most_likely
+                        InterpretNumber(
+                            additional_number, iteration=self.iteration
+                        ).most_likely
                         for additional_number in split_in_separate_numbers(nr_img)
                     )
                 )
@@ -58,7 +66,9 @@ class PlayingField:
             for nr_tab in sidebar
         ]
 
-    def _solve_generic(self, solution: np.ndarray, numbers: list[list[int]], horizontal: bool):
+    def _solve_generic(
+        self, solution: np.ndarray, numbers: list[list[int]], horizontal: bool
+    ):
         get_line = _get_line_horizontal if horizontal else _get_line_vertical
         set_line = _set_line_horizontal if horizontal else _set_line_vertical
 

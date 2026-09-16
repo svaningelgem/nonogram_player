@@ -43,7 +43,9 @@ class FakePlayer:
 
     @cache
     def _connect(self):
-        self._client = Client(host="127.0.0.1", port=5037)  # Default is "127.0.0.1" and 5037
+        self._client = Client(
+            host="127.0.0.1", port=5037
+        )  # Default is "127.0.0.1" and 5037
 
         try:
             self._devices = self._client.devices()
@@ -92,7 +94,9 @@ class FakePlayer:
         canny_output = cv2.Canny(gray, threshold, threshold * 2)
 
         # Find contours
-        contours, hierarchy = cv2.findContours(canny_output, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(
+            canny_output, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+        )
 
         return src, contours, hierarchy
 
@@ -172,7 +176,10 @@ class FakePlayer:
                     if start_x != end_x:  # Swipe
                         amount_of_fields = round((end_x - start_x) / col_width) + 1
                         yield (
-                            f"input swipe {start_x} {click_y} {end_x} {click_y} {amount_of_fields * duration_per_field}"
+                            "input swipe "
+                            f"{start_x} {click_y} "
+                            f"{end_x} {click_y} "
+                            f"{amount_of_fields * duration_per_field}"
                         )
                     else:
                         yield f"input tap {start_x} {click_y}"
@@ -220,7 +227,9 @@ class FakePlayer:
         # https://newbedev.com/how-can-i-create-a-circular-mask-for-a-numpy-array
         if center is None:  # use the middle of the image
             center = (int(w / 2), int(h / 2))
-        if radius is None:  # use the smallest distance between the center and image walls
+        if (
+            radius is None
+        ):  # use the smallest distance between the center and image walls
             radius = min(center[0], center[1], w - center[0], h - center[1])
 
         Y, X = np.ogrid[:h, :w]
